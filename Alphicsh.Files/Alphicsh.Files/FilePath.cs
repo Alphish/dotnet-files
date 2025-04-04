@@ -58,6 +58,30 @@ public record struct FilePath
     public FilePath GetDirectory()
         => TryGetDirectory() ?? throw new InvalidOperationException($"The path '{Value}' doesn't have a parent directory.");
 
+    // --------
+    // Relative
+    // --------
+
+    public FilePath RelativeTo(FilePath originPath)
+    {
+        if (IsRelative)
+            throw new InvalidOperationException($"Path '{Value}' cannot be used as a relative path target, because it's relative.");
+
+        if (originPath.IsRelative)
+            throw new ArgumentException($"Path '{originPath.Value}' cannot be used as a relative path origin, because it's relative.", nameof(originPath));
+
+        var result = Path.GetRelativePath(originPath, Value);
+
+        // if the origin and target are the same, replace the dot with an empty string
+        if (result == ".")
+            return new FilePath("");
+
+        return new FilePath(result);
+    }
+
+    public FilePath RelativeTo(string originPath)
+        => RelativeTo(FilePath.From(originPath));
+
     // ---------
     // Appending
     // ---------
